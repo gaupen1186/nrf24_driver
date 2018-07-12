@@ -1,9 +1,7 @@
 # Nordic nRF24L01+ and Si24R1 Driver
 
 # 项目介绍
-适用于ROXs2，重新编写的 nrf24l01p（包括兼容芯片 Si24R1）的驱动程序，以及测试例程
-
-基于nordic nRF5_SDK 15.0.0_a53641a
+用于 nrf24l01p（包括兼容芯片 Si24R1）的驱动程序
 
 # 如何使用
 
