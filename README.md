@@ -17,16 +17,27 @@
 - 修改以下函数的实现方式
 
     > nrf24_delay_us
+    >
     > nrf24_delay_ms
+    >
     > nrf24_set_CSN_Low
+    >
     > nrf24_set_CSN_High
+    >
     > nrf24_set_CE_Low
+    >
     > nrf24_set_CE_High
+    >
     > nrf24_get_CE
+    >
     > NRF24_SPI_SendMulti
+    >
     > NRF24_SPI_RecvMulti
+    >
     > NRF24_ReadRegisterMulti
+    >
     > NRF24_WriteRegisterMulti
+    >
     > nrf24_hal_init
 ### 2. 初始化
 - 在你的工程中编写4个回调函数，原型位于 **nrf24l01p.h** 中的 **NRF24_cb_t** 类型
