@@ -211,8 +211,8 @@ bool NRF24_Set_DR_Power(NRF24_DR_t dataRate, NRF24_Power_t power)
 
 /*
   pipe_number = 0 ~ 5
-  if pipe_number = 2~5, this func only set the 5th byte address,
-  byte 1~4 address do not be set
+  if pipe_number = 2~5, this func set the first 4 byte address to 
+  reg REG_RX_ADDR_P1, and then set the 5th byte to the REG_RX_ADDR_Px
 */
 bool NRF24_SetRxAddress(uint8_t pipe_number, uint8_t *rx_addr)
 {
@@ -226,6 +226,13 @@ bool NRF24_SetRxAddress(uint8_t pipe_number, uint8_t *rx_addr)
   // read back auto ack of pipe x
   uint8_t enaa_px = NRF24_ReadRegister(NRF24_REG_EN_AA);
 
+  // set pipe 2~5 high 4 bytes address to reg NRF24_REG_RX_ADDR_P1
+  if( pipe_number != 0 || pipe_number != 1 )
+  {
+    if( NRF24_WriteRegisterMulti(NRF24_REG_RX_ADDR_P1, rx_addr, 4) != true )
+      return false;
+  }
+  
   switch (pipe_number)
   {
   case 0:
@@ -240,22 +247,22 @@ bool NRF24_SetRxAddress(uint8_t pipe_number, uint8_t *rx_addr)
     break;
 
   case 2:
-    ret = NRF24_WriteRegister(NRF24_REG_RX_ADDR_P2, rx_addr[4]);
+    ret = NRF24_WriteRegisterMulti(NRF24_REG_RX_ADDR_P2, &rx_addr[4], 1);
     NRF24_SET_BIT(en_rx_px, NRF24_ERX_P2);
     break;
 
   case 3:
-    ret = NRF24_WriteRegister(NRF24_REG_RX_ADDR_P3, rx_addr[4]);
+    ret = NRF24_WriteRegisterMulti(NRF24_REG_RX_ADDR_P3, &rx_addr[4], 1);
     NRF24_SET_BIT(en_rx_px, NRF24_ERX_P3);
     break;
 
   case 4:
-    ret = NRF24_WriteRegister(NRF24_REG_RX_ADDR_P4, rx_addr[4]);
+    ret = NRF24_WriteRegisterMulti(NRF24_REG_RX_ADDR_P4, &rx_addr[4], 1);
     NRF24_SET_BIT(en_rx_px, NRF24_ERX_P4);
     break;
 
   case 5:
-    ret = NRF24_WriteRegister(NRF24_REG_RX_ADDR_P5, rx_addr[4]);
+    ret = NRF24_WriteRegisterMulti(NRF24_REG_RX_ADDR_P5, &rx_addr[4], 1);
     NRF24_SET_BIT(en_rx_px, NRF24_ERX_P5);
     break;
   }

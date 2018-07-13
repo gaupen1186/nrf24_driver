@@ -34,8 +34,10 @@ extern "C"
 #ifndef __SI24R1__
 #define __NRF24L01P__
 #endif
-  /*====================================================
-  */
+
+/*******************************************************************************
+* 
+*/
 
   // command
 #define NRF24_CMD_RX_PAYLOAD 0x61  // Read RX-payload
@@ -187,7 +189,8 @@ extern "C"
 #define NRF24_DPL_P4 4
 #define NRF24_DPL_P5 5
 
-  /** NRF24P_Typedefs
+  /*******************************************************************************
+  * NRF24P_Typedefs
   */
 
   /**
@@ -280,7 +283,11 @@ extern "C"
   {
     void (*TX_done_cb)(void);                                       // tx done callback
     void (*TX_full_cb)(void);                                       // tx fifo full callback
-    void (*RX_data_ready_cb)(NRF24_fifo_t *data, uint8_t pipe_num); // rx data ready callback
+    /* rx data ready callback
+       data: received data, 3 packets max
+       pipe_num: the pipe number of received data
+    */
+    void (*RX_data_ready_cb)(NRF24_fifo_t *data, uint8_t pipe_num);
     void (*Max_retry_cb)(void);                                     // max retry count callback
   } NRF24_cb_t;
 
@@ -304,8 +311,8 @@ extern "C"
     NRF24_cb_t *callback;
   } NRF24_t;
 
-  /*
-  *
+  /*******************************************************************************
+  * Public functions prototype
   */
   void NRF24_Dump_Regs(uint8_t *regs);
   bool NRF24_SetChannel(uint8_t channel);
