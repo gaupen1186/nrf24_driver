@@ -154,6 +154,7 @@ extern "C"
 #define NRF24_ARC 0 //4 bits
 
   /* RF setup register*/
+#define NRF24_CONT_WAVE 7
 #define NRF24_PLL_LOCK 4
 #define NRF24_RF_DR_LOW 5
 #define NRF24_RF_DR_HIGH 3
@@ -316,6 +317,7 @@ extern "C"
   */
   void NRF24_Dump_Regs(uint8_t *regs);
   bool NRF24_SetChannel(uint8_t channel);
+  bool NRF24_Set_Constant_Output(uint8_t channel, NRF24_Power_t power);
   bool NRF24_Set_DR_Power(NRF24_DR_t dataRate, NRF24_Power_t power);
   bool NRF24_SetRxAddress(uint8_t pipe_number, uint8_t *rx_addr);
   bool NRF24_SetTxAddress(uint8_t *tx_addr);

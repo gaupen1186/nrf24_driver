@@ -209,6 +209,53 @@ bool NRF24_Set_DR_Power(NRF24_DR_t dataRate, NRF24_Power_t power)
   return ret;
 }
 
+// Constant carrier wave output for testing
+bool NRF24_Set_Constant_Output(uint8_t channel, NRF24_Power_t power)
+{
+  uint8_t tmp = 0;
+  
+  if( NRF24_PowerStandby() != true )
+    return false;
+  
+#ifdef __SI24R1__
+  if (power == NRF24_Power_7dBm)
+    tmp |= 7 << NRF24_RF_PWR;
+  else if (power == NRF24_Power_4dBm)
+    tmp |= 6 << NRF24_RF_PWR;
+  else if (power == NRF24_Power_3dBm)
+    tmp |= 5 << NRF24_RF_PWR;
+  else if (power == NRF24_Power_1dBm)
+    tmp |= 4 << NRF24_RF_PWR;
+  else if (power == NRF24_Power_0dBm)
+    tmp |= 3 << NRF24_RF_PWR;
+  else if (power == NRF24_Power_N4dBm)
+    tmp |= 2 << NRF24_RF_PWR;
+  else if (power == NRF24_Power_N6dBm)
+    tmp |= 1 << NRF24_RF_PWR;
+  else if (power == NRF24_Power_N12dBm)
+    tmp |= 0 << NRF24_RF_PWR;
+#elif define __NRF24L01P__
+  if (power == NRF24_Power_0dBm)
+    tmp |= 3 << NRF24_RF_PWR;
+  else if (power == NRF24_Power_N6dBm)
+    tmp |= 2 << NRF24_RF_PWR;
+  else if (power == NRF24_Power_N12dBm)
+    tmp |= 1 << NRF24_RF_PWR;
+  else if (power == NRF24_Power_N18dBm)
+    tmp |= 0 << NRF24_RF_PWR;
+#endif
+
+  if( NRF24_SetChannel(channel) != true )
+    return false;
+  
+  NRF24_SET_BIT( tmp, NRF24_CONT_WAVE );
+  NRF24_SET_BIT( tmp, NRF24_PLL_LOCK );
+  
+  bool ret = NRF24_WriteRegister(NRF24_REG_RF_SETUP, tmp);
+
+  return ret;
+}
+
 /*
   pipe_number = 0 ~ 5
   if pipe_number = 2~5, this func set the first 4 byte address to 

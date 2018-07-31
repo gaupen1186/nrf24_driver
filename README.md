@@ -16,29 +16,25 @@
 
 - 修改以下函数的实现方式
 
-    > nrf24_delay_us
+    > nrf24_delay_us		// 微妙级延时
     >
-    > nrf24_delay_ms
+    > nrf24_delay_ms		//毫秒级延时
     >
-    > nrf24_set_CSN_Low
+    > nrf24_set_CSN_Low	// 设置CSn为低
     >
-    > nrf24_set_CSN_High
+    > nrf24_set_CSN_High	// 设置CSn为高
     >
-    > nrf24_set_CE_Low
+    > nrf24_set_CE_Low	// 设置CE为低
     >
-    > nrf24_set_CE_High
+    > nrf24_set_CE_High	// 设置CE为高
     >
-    > nrf24_get_CE
+    > nrf24_get_CE			// 获取CE状态
     >
-    > NRF24_SPI_SendMulti
+    > NRF24_SPI_SendMulti	// SPI 发送数据
     >
-    > NRF24_SPI_RecvMulti
+    > NRF24_SPI_RecvMulti // SPI 接收数据
     >
-    > NRF24_ReadRegisterMulti
-    >
-    > NRF24_WriteRegisterMulti
-    >
-    > nrf24_hal_init
+    > nrf24_hal_init			// IO、外部中断、SPI 初始化
 ### 2. 初始化
 - 在你的工程中编写4个回调函数，原型位于 **nrf24l01p.h** 中的 **NRF24_cb_t** 类型
 - 创建 **NRF24_cb_t** 类型的回调函数集
@@ -100,7 +96,7 @@ void nrf24_irq_pin_handler()
   NRF24_Irq_callback();
 }
 ````
-### 3. 初始化、发送、接收
+### 3. 初始化、发送、接收处理
 ````c
 NRF24_cb_t nrf24_callback = {tx_done_callback, tx_full_callback，
                              rx_data_ready_callback, max_retry_callback};
@@ -115,8 +111,8 @@ int main(void)
                          rx_addr,
                          AUTO_ACK,
                          9, // ( 9 +1 )* 250us = 2500 us
-                         6,
-                         &nrf24_callback ); // retry 5 times
+                         6, // retry 5 times
+                         &nrf24_callback );
   if (ret == false)
   {
     LOG_ERROR("nrf24 INIT error!");
@@ -144,6 +140,11 @@ int main(void)
       NRF24_Flush_Tx();
       is_rx_ok = true;
     }
+    // tx done
+    if( is_tx_ok == true )
+    {
+      LOG_INFO("Transimit ok.");
+    }
   }
 }
 ````
@@ -153,8 +154,9 @@ int main(void)
 ## 注意事项
 
 1. 初始化的时候，只能先指定一个接收管道的地址。如果需要使用多个接收管道，你需要在初始化完成后单独使用函数 **NRF24_SetRxAddress** 来开启多个管道
-2. 此驱动代码固定使用 5 bytes 地址，其它长度地址暂未实现
-3. 自动应答和非自动应答模式，仅支持一种，若需改变应答模式，需重新调用初始化函数 **NRF24_Init**
+2. 固定使用 5 bytes 地址，其它长度地址暂未实现
+3. 固定使用动态payload长度模式
+4. 自动应答和非自动应答模式，仅支持一种，若需改变应答模式，需重新调用初始化函数 **NRF24_Init**
 
 ---
 
@@ -168,4 +170,4 @@ int main(void)
 ---
 
 ## 版权
-> Copyright (C) gaupen1186@gmail.com, 2018
+​	Copyright (C) gaupen1186@gmail.com, 2018
