@@ -274,7 +274,7 @@ bool NRF24_SetRxAddress(uint8_t pipe_number, uint8_t *rx_addr)
   uint8_t enaa_px = NRF24_ReadRegister(NRF24_REG_EN_AA);
 
   // set pipe 2~5 high 4 bytes address to reg NRF24_REG_RX_ADDR_P1
-  if( pipe_number != 0 || pipe_number != 1 )
+  if( pipe_number != 0 && pipe_number != 1 )
   {
     if( NRF24_WriteRegisterMulti(NRF24_REG_RX_ADDR_P1, rx_addr, 4) != true )
       return false;
