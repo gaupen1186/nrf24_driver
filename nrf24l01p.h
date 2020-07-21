@@ -1,6 +1,23 @@
+/*!
+****************************************************************************
+* Copyright (C) A-Champs 2019
+*
+* nrf24l01p.h
+* Date: 2019/2/28
+* Revision: 1.0
+* Author: Pan@a-champs.com
+*
+* Brief: xxx
+* Usage: xxx
+*
+****************************************************************************
+*/
+#ifndef __NRF24L01P_H__
+#define __NRF24L01P_H__
 
-#ifndef __NRF24_H__
-#define __NRF24_H__
+#include <stdbool.h>
+#include <stdint.h>
+
 
 /* C++ detection */
 #ifdef __cplusplus
@@ -10,7 +27,7 @@ extern "C"
 
   /**
   Copyright (C) gaupen1186@gmail.com, 2018
-  
+
   brief
   *
   *
@@ -26,18 +43,28 @@ extern "C"
   * @brief    Library defines
   * @{
   */
-  
+
   /*====================================================
   */
-#define __SI24R1__
 
-#ifndef __SI24R1__
-#define __NRF24L01P__
-#endif
+// SI24R1 = true, nrf24l01p = false
+#define __SI24R1__    false
+
 
 /*******************************************************************************
-* 
+*
 */
+
+// dynamic paload length settings
+#define ENABLE_DYNAMIC_PALOAD_LENGTH    false
+
+#if !ENABLE_DYNAMIC_PALOAD_LENGTH
+// static paload length settings
+#define NRF24_STATIC_LENGTH     32
+#endif
+
+
+#define NRF24_MAX_PAYLOAD_SIZE 32
 
   // command
 #define NRF24_CMD_RX_PAYLOAD 0x61  // Read RX-payload
@@ -158,11 +185,11 @@ extern "C"
 #define NRF24_PLL_LOCK 4
 #define NRF24_RF_DR_LOW 5
 #define NRF24_RF_DR_HIGH 3
-#ifdef __SI24R1__          // si24R1 is 3 bits
-#define NRF24_RF_PWR 0     // bits 0 ~2
-#elif define __NRF24L01P__ // rf24l01p is 2bits
-#define NRF24_RF_PWR 1     // bits 1~2
-#endif                     // __SI24R1__
+#if __SI24R1__
+#define NRF24_RF_PWR 0     // bits 0 ~2, si24R1 is 3 bits
+#else   // NRF24L01P
+#define NRF24_RF_PWR 1     // bits 1~2, rf24l01p is 2bits
+#endif  // __SI24R1__
 
   /* General status register */
 #define NRF24_RX_DR 6
@@ -201,7 +228,8 @@ extern "C"
   {
     AUTO_ACK,
     NO_ACK
-  } NRF24_ACK_t;
+  }
+  NRF24_ACK_t;
 
   /**
   * @brief  Data rate enumeration
@@ -211,7 +239,8 @@ extern "C"
     NRF24_DataRate_2M,  /*!< Data rate set to 2Mbps */
     NRF24_DataRate_1M,  /*!< Data rate set to 1Mbps */
     NRF24_DataRate_250k /*!< Data rate set to 250kbps */
-  } NRF24_DR_t;
+  }
+  NRF24_DR_t;
 
   /**
   * @brief  Output power enumeration
@@ -221,16 +250,17 @@ extern "C"
     NRF24_Power_0dBm,   // 0dBm
     NRF24_Power_N6dBm,  // -6dBm
     NRF24_Power_N12dBm, // -12dBm
-#ifdef __SI24R1__
+#if __SI24R1__
     NRF24_Power_7dBm,  // 7dBm
     NRF24_Power_4dBm,  // 4dBm
     NRF24_Power_3dBm,  // 3dBm
     NRF24_Power_1dBm,  // 1dBm
     NRF24_Power_N4dBm, // -4dBm
-#elif define __NRF24L01P__
-  NRF24_Power_N18dBm, // -18dBm
+#else   // NRF24L01P
+    NRF24_Power_N18dBm, // -18dBm
 #endif
-  } NRF24_Power_t;
+  }
+  NRF24_Power_t;
 
   /**
   * @brief  fifo status
@@ -242,16 +272,8 @@ extern "C"
     bool is_tx_empty;
     bool is_rx_full;
     bool is_rx_empty;
-  } NRF24_FifoStatus_t;
-
-  /**
-  * @brief  fifo data
-  */
-  typedef struct
-  {
-    uint8_t packet[32];
-    uint8_t size;
-  } NRF24_fifo_t;
+  }
+  NRF24_FifoStatus_t;
 
   /**
   * @brief  global status
@@ -264,7 +286,8 @@ extern "C"
     bool is_max_rt; // Maximum number of TX retransmits interrupt Write 1 to clear bit
     bool is_tx_ds;  // Data Sent TX FIFO interrupt
     bool is_rx_dr;  // Data Ready RX FIFO interrupt
-  } NRF24_status_t;
+  }
+  NRF24_status_t;
 
   /**
   * @brief  device mode enumeration
@@ -275,22 +298,24 @@ extern "C"
     MODE_STANDBY,
     MODE_TX,
     MODE_RX,
-  } NRF24_mode_t;
+  }
+  NRF24_mode_t;
 
   /**
   * @brief  call back functions struct
   */
   typedef struct
   {
-    void (*TX_done_cb)(void);                                       // tx done callback
-    void (*TX_full_cb)(void);                                       // tx fifo full callback
+    void (*TX_done_cb)(void);             // tx done callback
+    void (*TX_full_cb)(void);             // tx fifo full callback
     /* rx data ready callback
        data: received data, 3 packets max
        pipe_num: the pipe number of received data
     */
-    void (*RX_data_ready_cb)(NRF24_fifo_t *data, uint8_t pipe_num);
-    void (*Max_retry_cb)(void);                                     // max retry count callback
-  } NRF24_cb_t;
+    void (*RX_data_ready_cb)(uint8_t *data, uint8_t size, uint8_t pipe_num);
+    void (*Max_retry_cb)(void);         // max retry count callback
+  }
+  NRF24_cb_t;
 
   /**
   * @brief  device global struct
@@ -300,9 +325,14 @@ extern "C"
     uint8_t Channel;     //Channel selected
     NRF24_Power_t Power; //Output power
     NRF24_DR_t DataRate; //Data rate
-    uint8_t rx_pipe;     // rx pipe number, 0~5
-    uint8_t tx_address[5];
-    uint8_t rx_address[5];
+//    uint8_t rx_pipe;     // rx pipe number, 0~5
+    uint8_t tx_addr[5];
+    uint8_t rx0_addr[5];    // rx pipe 0 address
+    uint8_t rx1_addr[5];    // rx pipe 1 address
+    uint8_t rx2_addr;    // rx pipe 2 address
+    uint8_t rx3_addr;    // rx pipe 3 address
+    uint8_t rx4_addr;    // rx pipe 4 address
+    uint8_t rx5_addr;    // rx pipe 5 address
     NRF24_ACK_t ack;
     uint8_t delay;       // Auto Retransmit Delay Time = ( delay +1 )* 250us
     uint8_t retry_count; // Auto Retransmit Count, 0~15, 0 is disabled
@@ -310,45 +340,46 @@ extern "C"
     NRF24_status_t status;
     NRF24_mode_t mode; // current mode
     NRF24_cb_t *callback;
-  } NRF24_t;
+  }
+  NRF24_t;
 
   /*******************************************************************************
   * Public functions prototype
   */
   void NRF24_Dump_Regs(uint8_t *regs);
-  bool NRF24_SetChannel(uint8_t channel);
-  bool NRF24_Set_Constant_Output(uint8_t channel, NRF24_Power_t power);
-  bool NRF24_Set_DR_Power(NRF24_DR_t dataRate, NRF24_Power_t power);
-  bool NRF24_SetRxAddress(uint8_t pipe_number, uint8_t *rx_addr);
-  bool NRF24_SetTxAddress(uint8_t *tx_addr);
-  bool NRF24_SetAutoRetry(uint8_t delay, uint8_t count);
+  bool NRF24_SetChannel(NRF24_t *nrf24, uint8_t channel);
+  bool NRF24_GetChannel(NRF24_t *nrf24, uint8_t *channel);
+  bool NRF24_Set_DR_Power(NRF24_t *nrf24, NRF24_DR_t dataRate, NRF24_Power_t power);
+  bool NRF24_Set_Constant_Output(NRF24_t *nrf24, uint8_t channel, NRF24_Power_t power);
+  bool NRF24_Set_Pipe_AutoAck(NRF24_t *nrf24, bool enable, uint8_t pipe_num);
+  bool NRF24_Set_Pipe_Enable(NRF24_t *nrf24, bool enable, uint8_t pipe_num);
+  bool NRF24_SetRxAddress(NRF24_t *nrf24, uint8_t pipe_number, uint8_t *rx_addr);
+  bool NRF24_GetRxAddress(uint8_t pipe_number, uint8_t *addr);
+  bool NRF24_SetTxAddress(NRF24_t *nrf24, uint8_t *tx_addr);
+  bool NRF24_GetTxAddress(uint8_t *addr);
+  bool NRF24_SetAutoRetry(NRF24_t *nrf24, uint8_t delay, uint8_t count);
   bool NRF24_Flush_Tx(void);
   bool NRF24_Flush_Rx(void);
-  bool NRF24_PowerDown(void);
-  bool NRF24_PowerStandby(void);
-  bool NRF24_PowerUpTx(void);
-  bool NRF24_PowerUpRx(void);
-  NRF24_mode_t NRF24_GetMode(void);
-  NRF24_status_t NRF24_GetStatus(void);
-  NRF24_FifoStatus_t NRF24_Get_Fifo_Status(void);
-  uint8_t NRF24_Get_Retry_Count(void);
-  bool NRF24_is_channel_free(uint8_t channel);
-  bool NRF24_Init(uint8_t channel,
-                  NRF24_Power_t power,
-                  NRF24_DR_t dataRate,
-                  uint8_t rx_pipe,
-                  uint8_t *tx_address,
-                  uint8_t *rx_address,
+  bool NRF24_PowerDown(NRF24_t *nrf24);
+  bool NRF24_PowerStandby(NRF24_t *nrf24);
+  bool NRF24_PowerUpTx(NRF24_t *nrf24);
+  bool NRF24_PowerUpRx(NRF24_t *nrf24);
+  bool NRF24_GetMode(NRF24_t *nrf24, NRF24_mode_t *mode);
+  bool NRF24_GetStatus(NRF24_t *nrf24, NRF24_status_t *p_status);
+  bool NRF24_Get_Fifo_Status(NRF24_t *nrf24, NRF24_FifoStatus_t *fifo_status);
+  bool NRF24_Get_Retry_Count(uint8_t *retry_cnt);
+  bool NRF24_is_channel_free(NRF24_t *nrf24, uint8_t channel, bool *is_ch_free);
+  bool NRF24_Init(NRF24_t *nrf24,
                   NRF24_ACK_t ack,
                   uint8_t delay,
                   uint8_t retry_count,
                   NRF24_cb_t *call_back);
-  bool NRF24_Transmit(uint8_t *data, uint8_t size);
-  void NRF24_Irq_callback(void);
+  bool NRF24_Transmit(NRF24_t *nrf24, uint8_t *data, uint8_t size);
+  void NRF24_Irq_callback(NRF24_t *nrf24);
 
   /* C++ detection */
 #ifdef __cplusplus
 }
 #endif
 
-#endif // __NRF24_H__
+#endif // __NRF24L01P_H__
